@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Prediction HQ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    color-scheme: light;
+    --surface:      #ffffff;
+    --plane:        #f6f4f9;
+    --ink:          #14121a;
+    --ink-2:        #55506a;
+    --muted:        #8b849e;
+    --hairline:     #e7e3ef;
+    --track:        #f0ecf7;
+    /* validated: light categorical pair, 3:1+ on #ffffff */
+    --boy:          #2f8dc4;
+    --girl:         #e6537f;
+    --bar:          #8f5fd6;
+    --accent:       #7343b8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface:    #1a1a19;
+      --plane:      #0e0e0d;
+      --ink:        #ffffff;
+      --ink-2:      #c9c5d4;
+      --muted:      #928c9e;
+      --hairline:   #2e2d33;
+      --track:      #2a2930;
+      /* validated: dark categorical pair, band + 3:1 on #1a1a19 */
+      --boy:        #3392cc;
+      --girl:       #e05680;
+      --bar:        #a888e0;
+      --accent:     #b49ae4;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface:    #1a1a19;
+    --plane:      #0e0e0d;
+    --ink:        #ffffff;
+    --ink-2:      #c9c5d4;
+    --muted:      #928c9e;
+    --hairline:   #2e2d33;
+    --track:      #2a2930;
+    --boy:        #3392cc;
+    --girl:       #e05680;
+    --bar:        #a888e0;
+    --accent:     #b49ae4;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--plane);
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    padding: 0 0 48px;
+    line-height: 1.5;
+  }
+
+  .wrap { max-width: 620px; margin: 0 auto; padding: 0 14px; }
+
+  /* ---------- header ---------- */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--plane);
+    padding: 16px 0 12px;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 16px;
+  }
+  .head-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em; }
+  .sub { font-size: .78rem; color: var(--muted); font-weight: 500; }
+  .icon-btn {
+    flex: none;
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    border: 1px solid var(--hairline);
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: 1rem;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .icon-btn:active { transform: scale(.94); }
+
+  /* ---------- cards ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    padding: 18px 16px;
+    margin-bottom: 12px;
+  }
+  .card h2 {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ---------- hero + KPIs ---------- */
+  .hero { text-align: center; padding: 24px 16px 20px; }
+  .hero-num { font-size: 3.6rem; font-weight: 700; line-height: 1; letter-spacing: -.03em; }
+  .hero-label { font-size: .9rem; color: var(--ink-2); margin-top: 6px; font-weight: 600; }
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .kpi { background: var(--surface); border: 1px solid var(--hairline); border-radius: 16px; padding: 14px; }
+  .kpi-num { font-size: 1.65rem; font-weight: 700; line-height: 1.1; letter-spacing: -.02em; }
+  .kpi-lab { font-size: .74rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+
+  /* ---------- team split (stacked bar) ---------- */
+  .split-bar {
+    display: flex; height: 30px; border-radius: 8px; overflow: hidden;
+    background: var(--track); gap: 2px; /* 2px surface gap between fills */
+  }
+  .split-bar span { display: block; transition: width .6s cubic-bezier(.2,.8,.3,1); }
+  .seg-boy  { background: var(--boy); border-radius: 8px 4px 4px 8px; }
+  .seg-girl { background: var(--girl); border-radius: 4px 8px 8px 4px; }
+  .split-legend { display: flex; justify-content: space-between; margin-top: 10px; font-size: .88rem; font-weight: 600; }
+  .split-legend .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+  .lead-note { margin-top: 10px; font-size: .84rem; color: var(--ink-2); text-align: center; }
+
+  /* ---------- tally bars ---------- */
+  .tally { margin-bottom: 13px; }
+  .tally:last-child { margin-bottom: 0; }
+  .tally-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; gap: 10px; }
+  .tally-lab { font-size: .87rem; font-weight: 600; }
+  .tally-val { font-size: .87rem; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; flex: none; }
+  .tally-track { height: 10px; background: var(--track); border-radius: 999px; overflow: hidden; }
+  .tally-fill { height: 100%; background: var(--bar); border-radius: 999px; transition: width .6s cubic-bezier(.2,.8,.3,1); }
+
+  /* ---------- lists ---------- */
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 0; border-bottom: 1px solid var(--hairline);
+    font-size: .92rem;
+  }
+  .row:last-child { border-bottom: none; }
+  .row-main { flex: 1; min-width: 0; }
+  .row-name { font-weight: 700; }
+  .row-sub { font-size: .78rem; color: var(--muted); margin-top: 1px; }
+  .chip {
+    flex: none; font-size: .72rem; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px;
+    border: 1px solid var(--hairline); color: var(--ink-2);
+  }
+  .chip-boy  { color: var(--boy); border-color: var(--boy); }
+  .chip-girl { color: var(--girl); border-color: var(--girl); }
+
+  .wish {
+    border-left: 3px solid var(--accent);
+    padding: 2px 0 2px 12px;
+    margin-bottom: 14px;
+    font-size: .92rem;
+  }
+  .wish:last-child { margin-bottom: 0; }
+  .wish-from { font-size: .76rem; color: var(--muted); font-weight: 700; margin-top: 3px; }
+
+  /* ---------- gate ---------- */
+  .gate { max-width: 400px; margin: 12vh auto 0; padding: 0 18px; text-align: center; }
+  .gate .big { font-size: 44px; margin-bottom: 12px; }
+  .gate h2 { font-size: 1.15rem; margin-bottom: 6px; font-weight: 700; }
+  .gate p { color: var(--ink-2); font-size: .88rem; margin-bottom: 20px; }
+  input {
+    width: 100%; font: inherit; font-size: 1rem;
+    padding: 14px 16px; border-radius: 13px;
+    border: 1px solid var(--hairline); background: var(--surface); color: var(--ink);
+    margin-bottom: 10px; outline: none;
+  }
+  input:focus { border-color: var(--accent); }
+  .btn {
+    width: 100%; font: inherit; font-size: 1rem; font-weight: 700;
+    padding: 14px; border-radius: 13px; border: none;
+    background: var(--accent); color: #fff; cursor: pointer;
+    touch-action: manipulation;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn.ghost { background: transparent; color: var(--muted); font-weight: 600; font-size: .85rem; padding: 10px; }
+  .err { color: #d03b3b; font-size: .85rem; min-height: 1.2em; font-weight: 600; }
+
+  .empty { color: var(--muted); font-size: .88rem; }
+  .status { text-align: center; padding: 50px 20px; color: var(--muted); font-weight: 600; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--hairline); }
+  th { color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; }
+  td { font-variant-numeric: tabular-nums; }
+  .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  footer { text-align: center; color: var(--muted); font-size: .74rem; padding: 20px 0 0; }
+</style>
+</head>
+<body>
+
+<!-- ============ PASSCODE GATE ============ -->
+<div id="gate" class="gate">
+  <div class="big">🔒</div>
+  <h2>Prediction HQ</h2>
+  <p>Private dashboard. Enter your passcode to continue.</p>
+  <input type="password" id="pass" placeholder="Passcode" autocomplete="current-password" inputmode="text">
+  <button class="btn" onclick="unlock()">Unlock</button>
+  <p class="err" id="gateErr"></p>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="app" style="display:none">
+  <header>
+    <div class="wrap head-row">
+      <div>
+        <h1>Prediction HQ</h1>
+        <div class="sub" id="updated">—</div>
+      </div>
+      <button class="icon-btn" onclick="load()" title="Refresh" aria-label="Refresh">⟳</button>
+      <button class="icon-btn" onclick="toggleTheme()" title="Light / dark" aria-label="Toggle theme">◐</button>
+    </div>
+  </header>
+  <div class="wrap" id="content">
+    <div class="status">Loading…</div>
+  </div>
+  <div class="wrap">
+    <footer>
+      <button class="btn ghost" onclick="signOut()">Sign out of this device</button>
+    </footer>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   No passcode and no due date are stored in this file. Both are
+   entered once on the device and kept in localStorage, so anyone
+   who finds this page without them sees nothing.
+   --------------------------------------------------------------- */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXuUsGkQSibQVm_SmWBTfT6siLTtd4XuqVvgMt6iOssC5W2BWk6JX9ACzCaqH-XoK42Q/exec";
+
+/* sheet columns (Apps Script v5) */
+const C = { SEEN:0, UPDATED:1, STATUS:2, CLIENT:3, NAME:4, GENDER:5, BABYNAME:6,
+            LOOKS:7, DATE:8, WEIGHT:9, WORD:10, TRIVIA:11, WISH:12, RELATION:13 };
+
+let KEY = null;
+let showTable = false;
+let lastRows = [];
+
+/* ---------- gate ---------- */
+function unlock() {
+  const v = document.getElementById("pass").value.trim();
+  if (!v) return;
+  KEY = v;
+  document.getElementById("gateErr").textContent = "Checking…";
+  load(true);
+}
+document.getElementById("pass").addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
+
+function signOut() {
+  try { localStorage.removeItem("hqKey"); } catch (e) {}
+  location.reload();
+}
+
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const dark = cur ? cur === "dark"
+    : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+}
+
+/* ---------- data ---------- */
+async function load(fromGate) {
+  if (!KEY) return;
+  const box = document.getElementById("content");
+  if (!fromGate) box.innerHTML = "<div class='status'>Refreshing…</div>";
+  try {
+    const r = await fetch(SCRIPT_URL + "?stats=full&key=" + encodeURIComponent(KEY));
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error === "wrong key" ? "That passcode didn't work." : (d.error || "Unknown error"));
+
+    try { localStorage.setItem("hqKey", KEY); } catch (e) {}
+    document.getElementById("gate").style.display = "none";
+    document.getElementById("app").style.display = "block";
+
+    lastRows = (d.rows || []).filter(r => r[C.NAME] && r[C.NAME] !== "Colleague");
+    render(lastRows);
+    document.getElementById("updated").textContent =
+      lastRows.length + " entries · updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  } catch (e) {
+    const msg = String(e.message || e);
+    if (document.getElementById("app").style.display === "none") {
+      document.getElementById("gateErr").textContent = msg;
+      KEY = null;
+    } else {
+      box.innerHTML = "<div class='status'>Couldn't refresh: " + esc(msg) + "</div>";
+    }
+  }
+}
+
+/* ---------- render ---------- */
+function render(rows) {
+  const n = rows.length;
+  if (!n) {
+    document.getElementById("content").innerHTML =
+      "<div class='status'>No predictions yet.<br>Share the link and watch this fill up 🎉</div>";
+    return;
+  }
+
+  const boys  = rows.filter(r => low(r[C.GENDER]) === "boy").length;
+  const girls = rows.filter(r => low(r[C.GENDER]) === "girl").length;
+  const voted = boys + girls;
+  const bp = voted ? Math.round(100 * boys / voted) : 50;
+  const gp = 100 - bp;
+
+  const done = rows.filter(r => String(r[C.STATUS]).indexOf("Completed") === 0).length;
+  const fam  = rows.filter(r => r[C.RELATION] === "Family").length;
+
+  const weights = rows.map(r => parseFloat(r[C.WEIGHT])).filter(w => !isNaN(w));
+  const avgW = weights.length ? (weights.reduce((a, b) => a + b, 0) / weights.length) : null;
+
+  const trivia = rows.map(r => parseInt(r[C.TRIVIA])).filter(t => !isNaN(t));
+  const avgT = trivia.length ? (trivia.reduce((a, b) => a + b, 0) / trivia.length) : null;
+
+  let h = "";
+
+  /* hero */
+  h += "<div class='card hero'><div class='hero-num'>" + n + "</div>" +
+       "<div class='hero-label'>people have played</div></div>";
+
+  /* KPI row */
+  h += "<div class='kpis'>" +
+    kpi(done, "finished") +
+    kpi(n - done, "mid-game") +
+    kpi(fam, "family") +
+    kpi(n - fam, "friends & colleagues") +
+    "</div>";
+
+  /* team split — stacked bar, both sides direct-labeled (never colour alone) */
+  const lead = bp > gp ? "Team Blue is ahead" : gp > bp ? "Team Pink is ahead" : "Dead heat";
+  h += "<div class='card'><h2>Boy vs Girl</h2>" +
+    "<div class='split-bar'>" +
+      "<span class='seg-boy' style='width:" + (voted ? bp : 50) + "%'></span>" +
+      "<span class='seg-girl' style='width:" + (voted ? gp : 50) + "%'></span>" +
+    "</div>" +
+    "<div class='split-legend'>" +
+      "<span><i class='dot' style='background:var(--boy)'></i>Boy · " + boys + " (" + bp + "%)</span>" +
+      "<span><i class='dot' style='background:var(--girl)'></i>Girl · " + girls + " (" + gp + "%)</span>" +
+    "</div>" +
+    "<div class='lead-note'>" + lead + "</div></div>";
+
+  /* name suggestions */
+  const names = rows.filter(r => String(r[C.BABYNAME]).trim());
+  h += "<div class='card'><h2>Name suggestions (" + names.length + ")</h2>";
+  h += names.length ? names.map(r => {
+    const g = low(r[C.GENDER]);
+    const chip = g === "boy" ? "<span class='chip chip-boy'>Boy</span>"
+               : g === "girl" ? "<span class='chip chip-girl'>Girl</span>" : "";
+    return "<div class='row'><div class='row-main'><div class='row-name'>" + esc(r[C.BABYNAME]) + "</div>" +
+           "<div class='row-sub'>" + esc(r[C.NAME]) + (r[C.RELATION] ? " · " + esc(r[C.RELATION]) : "") + "</div></div>" + chip + "</div>";
+  }).join("") : "<div class='empty'>Nothing yet.</div>";
+  h += "</div>";
+
+  /* tallies */
+  h += "<div class='card'><h2>Who will the baby look like</h2>" + tally(rows, C.LOOKS) + "</div>";
+  h += "<div class='card'><h2>First word</h2>" + tally(rows, C.WORD) + "</div>";
+
+  /* birth-date guesses, grouped by week (no due date referenced) */
+  h += "<div class='card'><h2>Birth date guesses</h2>" + dateBuckets(rows) + "</div>";
+
+  /* weight + trivia stat tiles */
+  h += "<div class='kpis'>" +
+    kpi(avgW === null ? "—" : avgW.toFixed(1) + " kg", "average weight guess") +
+    kpi(avgT === null ? "—" : avgT.toFixed(1) + "/4", "average trivia score") +
+    "</div>";
+
+  /* wishes */
+  const wishes = rows.filter(r => String(r[C.WISH]).trim());
+  h += "<div class='card'><h2>Wishes (" + wishes.length + ")</h2>";
+  h += wishes.length ? wishes.map(r =>
+        "<div class='wish'>" + esc(r[C.WISH]) + "<div class='wish-from'>— " + esc(r[C.NAME]) + "</div></div>"
+      ).join("") : "<div class='empty'>No wishes yet.</div>";
+  h += "</div>";
+
+  /* table view (accessibility: never colour-only, always a readable fallback) */
+  h += "<div class='card'><h2>Everyone</h2>" +
+       "<button class='btn ghost' onclick='toggleTable()'>" +
+       (showTable ? "Hide the full table" : "Show the full table") + "</button>";
+  if (showTable) h += fullTable(rows);
+  h += "</div>";
+
+  document.getElementById("content").innerHTML = h;
+}
+
+function toggleTable() { showTable = !showTable; render(lastRows); }
+
+function kpi(v, label) {
+  return "<div class='kpi'><div class='kpi-num'>" + v + "</div><div class='kpi-lab'>" + label + "</div></div>";
+}
+
+/* horizontal bars — length carries magnitude, one hue, value labelled on every row */
+function tally(rows, col) {
+  const counts = {};
+  rows.forEach(r => {
+    const v = String(r[col] || "").trim();
+    if (v && v !== "(skipped)") counts[v] = (counts[v] || 0) + 1;
+  });
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return "<div class='empty'>Nothing yet.</div>";
+  const max = entries[0][1];
+  return entries.map(([label, c]) =>
+    "<div class='tally'><div class='tally-top'><span class='tally-lab'>" + esc(label) +
+    "</span><span class='tally-val'>" + c + "</span></div>" +
+    "<div class='tally-track'><div class='tally-fill' style='width:" + Math.round(100 * c / max) + "%'></div></div></div>"
+  ).join("");
+}
+
+function dateBuckets(rows) {
+  const buckets = [
+    { label: "1–7 September", n: 0 },
+    { label: "8–14 September", n: 0 },
+    { label: "15–21 September", n: 0 },
+    { label: "22–30 September", n: 0 },
+    { label: "October or later", n: 0 }
+  ];
+  let any = 0;
+  rows.forEach(r => {
+    const d = new Date(r[C.DATE]);
+    if (isNaN(d)) return;
+    any++;
+    if (d.getMonth() > 8) buckets[4].n++;
+    else {
+      const day = d.getDate();
+      buckets[day <= 7 ? 0 : day <= 14 ? 1 : day <= 21 ? 2 : 3].n++;
+    }
+  });
+  if (!any) return "<div class='empty'>Nothing yet.</div>";
+  const max = Math.max.apply(null, buckets.map(b => b.n)) || 1;
+  return buckets.map(b =>
+    "<div class='tally'><div class='tally-top'><span class='tally-lab'>" + b.label +
+    "</span><span class='tally-val'>" + b.n + "</span></div>" +
+    "<div class='tally-track'><div class='tally-fill' style='width:" + Math.round(100 * b.n / max) + "%'></div></div></div>"
+  ).join("");
+}
+
+function fullTable(rows) {
+  let t = "<div class='scroll-x'><table><tr><th>Name</th><th>Rel.</th><th>Guess</th><th>Name idea</th>" +
+          "<th>Date</th><th>Weight</th><th>Word</th><th>Quiz</th></tr>";
+  rows.forEach(r => {
+    t += "<tr><td>" + esc(r[C.NAME]) + "</td><td>" + (r[C.RELATION] === "Family" ? "Fam" : "Friend") + "</td>" +
+      "<td>" + (esc(r[C.GENDER]) || "—") + "</td><td>" + (esc(r[C.BABYNAME]) || "—") + "</td>" +
+      "<td>" + (esc(r[C.DATE]) || "—") + "</td><td>" + (esc(r[C.WEIGHT]) || "—") + "</td>" +
+      "<td>" + (esc(r[C.WORD]) || "—") + "</td><td>" + (esc(r[C.TRIVIA]) || "—") + "</td></tr>";
+  });
+  return t + "</table></div>";
+}
+
+function low(v) { return String(v || "").trim().toLowerCase(); }
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g,
+    c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+/* remembered passcode → straight in */
+(function () {
+  let saved = null;
+  try { saved = localStorage.getItem("hqKey"); } catch (e) {}
+  if (saved) { KEY = saved; load(true); }
+})();
+</script>
+</body>
+</html>
