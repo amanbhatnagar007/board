@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Prediction HQ</title>
+<title>Ivika HQ</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -165,6 +165,15 @@
   .wish:last-child { margin-bottom: 0; }
   .wish-from { font-size: .76rem; color: var(--muted); font-weight: 700; margin-top: 3px; }
 
+  /* ---------- blessings / predictions filter ---------- */
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 14px;
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px; }
+  .tabs button { font: inherit; font-size: .9rem; font-weight: 700; padding: 11px 6px; border: none; border-radius: 10px;
+    background: transparent; color: var(--ink-2); cursor: pointer; touch-action: manipulation; }
+  .tabs button.on { background: var(--accent); color: #fff; }
+  .tabs small { font-weight: 600; opacity: .8; }
+  .bless-meta { display: flex; justify-content: space-between; gap: 8px; font-size: .76rem; color: var(--muted); font-weight: 700; margin-top: 4px; }
+
   /* ---------- gate ---------- */
   .gate { max-width: 400px; margin: 12vh auto 0; padding: 0 18px; text-align: center; }
   .gate .big { font-size: 44px; margin-bottom: 12px; }
@@ -204,7 +213,7 @@
 <!-- ============ PASSCODE GATE ============ -->
 <div id="gate" class="gate">
   <div class="big">🔒</div>
-  <h2>Prediction HQ</h2>
+  <h2>Ivika HQ</h2>
   <p>Private dashboard. Enter your passcode to continue.</p>
   <input type="password" id="pass" placeholder="Passcode" autocomplete="current-password" inputmode="text">
   <button class="btn" onclick="unlock()">Unlock</button>
@@ -216,7 +225,7 @@
   <header>
     <div class="wrap head-row">
       <div>
-        <h1>Prediction HQ</h1>
+        <h1>Ivika HQ</h1>
         <div class="sub" id="updated">—</div>
       </div>
       <button class="icon-btn" onclick="load()" title="Refresh" aria-label="Refresh">⟳</button>
@@ -248,6 +257,8 @@ const C = { SEEN:0, UPDATED:1, STATUS:2, CLIENT:3, NAME:4, GENDER:5, BABYNAME:6,
 let KEY = null;
 let showTable = false;
 let lastRows = [];
+let view = "blessings";                       // "blessings" | "predictions"
+const isBlessing = r => String(r[C.STATUS]).indexOf("Blessing") === 0;
 
 /* ---------- gate ---------- */
 function unlock() {
@@ -285,10 +296,10 @@ async function load(fromGate) {
     document.getElementById("gate").style.display = "none";
     document.getElementById("app").style.display = "block";
 
-    lastRows = (d.rows || []).filter(r => r[C.NAME] && r[C.NAME] !== "Colleague");
+    lastRows = (d.rows || []).filter(r => String(r[C.NAME]).trim() && r[C.NAME] !== "Colleague");
     render(lastRows);
     document.getElementById("updated").textContent =
-      lastRows.length + " entries · updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      "updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   } catch (e) {
     const msg = String(e.message || e);
     if (document.getElementById("app").style.display === "none") {
@@ -301,11 +312,19 @@ async function load(fromGate) {
 }
 
 /* ---------- render ---------- */
-function render(rows) {
+function setView(v) { view = v; render(lastRows); scrollTo({ top: 0 }); }
+
+function render(all) {
+  const blessings = all.filter(isBlessing), rows = all.filter(r => !isBlessing(r));
+  const tabs = "<div class='tabs' role='group' aria-label='Show'>" +
+    "<button type='button' class='" + (view === "blessings" ? "on" : "") + "' onclick=\"setView('blessings')\">🎀 Blessings <small>" + blessings.length + "</small></button>" +
+    "<button type='button' class='" + (view === "predictions" ? "on" : "") + "' onclick=\"setView('predictions')\">🔮 Predictions <small>" + rows.length + "</small></button></div>";
+  if (view === "blessings") { document.getElementById("content").innerHTML = tabs + blessingsView(blessings, rows); return; }
+
   const n = rows.length;
   if (!n) {
     document.getElementById("content").innerHTML =
-      "<div class='status'>No predictions yet.<br>Share the link and watch this fill up 🎉</div>";
+      tabs + "<div class='status'>No predictions yet.</div>";
     return;
   }
 
@@ -324,7 +343,7 @@ function render(rows) {
   const trivia = rows.map(r => parseInt(r[C.TRIVIA])).filter(t => !isNaN(t));
   const avgT = trivia.length ? (trivia.reduce((a, b) => a + b, 0) / trivia.length) : null;
 
-  let h = "";
+  let h = tabs;
 
   /* hero */
   h += "<div class='card hero'><div class='hero-num'>" + n + "</div>" +
@@ -395,6 +414,26 @@ function render(rows) {
 }
 
 function toggleTable() { showTable = !showTable; render(lastRows); }
+
+/* blessings sent from Ivika's page (Status "Blessing 🎀"), newest first,
+   plus the wishes written during the prediction game */
+function blessingsView(blessings, rows) {
+  const when = r => { const d = new Date(r[C.UPDATED] || r[C.SEEN]); return isNaN(d) ? "" : d.toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); };
+  const list = blessings.slice().sort((a, b) => String(b[C.UPDATED] || b[C.SEEN]).localeCompare(String(a[C.UPDATED] || a[C.SEEN])));
+  const fam = list.filter(r => r[C.RELATION] === "Friend").length;
+  let h = "<div class='card hero'><div class='hero-num'>" + list.length + "</div><div class='hero-label'>blessings for Ivika since she arrived</div></div>";
+  h += "<div class='kpis'>" + kpi(list.length - fam, "from family") + kpi(fam, "from friends") + "</div>";
+  h += "<div class='card'><h2>New blessings (" + list.length + ")</h2>";
+  h += list.length ? list.map(r =>
+      "<div class='wish'>" + esc(r[C.WISH]) + "<div class='bless-meta'><span>— " + esc(r[C.NAME]) +
+      (r[C.RELATION] ? " · " + esc(r[C.RELATION]) : "") + "</span><span>" + esc(when(r)) + "</span></div></div>"
+    ).join("") : "<div class='empty'>No blessings yet — they'll appear here as people send them.</div>";
+  h += "</div>";
+  const old = rows.filter(r => String(r[C.WISH]).trim());
+  h += "<div class='card'><h2>Wishes from the prediction game (" + old.length + ")</h2>";
+  h += old.map(r => "<div class='wish'>" + esc(r[C.WISH]) + "<div class='wish-from'>— " + esc(r[C.NAME]) + "</div></div>").join("") || "<div class='empty'>None.</div>";
+  return h + "</div>";
+}
 
 function kpi(v, label) {
   return "<div class='kpi'><div class='kpi-num'>" + v + "</div><div class='kpi-lab'>" + label + "</div></div>";
